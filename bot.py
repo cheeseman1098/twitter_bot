@@ -4,6 +4,7 @@ import webbrowser
 import time 
 import re
 import json
+import pandas as pd
 # %%
 consumer_key = "dTaeqdz0o0hUJMQor85t8Uv3J"
 consumer_secret = "6cxeZfGMxpZ0IIfrrUe17tMxJBtWzFOHFqKWAChIIk3WwLbx3t"
@@ -62,3 +63,34 @@ while True:
     print("Sleeping... zzz...")
     time.sleep(60)
 # %%
+test_tweet = api.search(q='"new earrings"', count=1, lang='en')
+raw_tweet = json.loads(test_tweet)
+test_tweet_formatted = json.dumps(raw_tweet, indent=2)
+print(test_tweet_formatted)
+# %%
+for tweet in test_tweet:
+    print(tweet.user.screen_name)
+liked_tweets = []
+#%%
+test_tweets = api.search(q="kanye", count=2)
+data = list()
+for tweet in test_tweets:
+    new_tweet = dict()
+    new_tweet["tweet_id"] = tweet.id
+    new_tweet["user_id"] = tweet.user.id
+    new_tweet["user_name"] = tweet.user.screen_name
+    new_tweet["user_location"] = tweet.user.location
+    new_tweet["user_verified"] = tweet.user.verified
+    new_tweet["user_followers"] = tweet.user.followers_count
+    new_tweet["user_following"] = tweet.user.friends_count
+    new_tweet["retweets"] = tweet.retweet_count
+    #new_tweet["replies"] = tweet.reply_count
+    new_tweet["favorites"] = tweet.favorite_count
+    new_tweet["liked"] = False
+    data.append(new_tweet)
+#%%
+record = pd.DataFrame(data)
+#%%
+record = record.append(data)
+#%%
+record.to_csv("tweet_records.csv")
