@@ -43,7 +43,7 @@ def update_last_seen(tweet):
 #%%
 def tweet_ok(in_tweet): #returns False if tweet contains a trigger word, True otherwise
     text = in_tweet.text.lower()
-    for trigger in trigger_words:
+    for trigger in get_trigger_words():
         if not text.lower().find(trigger) == -1:
             return False
     return True
