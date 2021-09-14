@@ -30,7 +30,7 @@ def get_last_seen() -> str:
     fhand = open("last_seen_id.txt")
     return fhand.read()
 #%%
-def update_last_seen(tweet: tweepy.models.Status) -> None:
+def update_last_seen(tweet: tweepy.Status) -> None:
     '''saves the input tweet's ID on to file last_seen_id.txt'''
     f = open("last_seen_id.txt")
     last_id = int(f.read())
@@ -48,7 +48,7 @@ def clean_tweets(tweets: list) -> list:
         if tweet_ok(tweet) == False: tweets.pop(count)
     return tweets
 #%%
-def tweet_ok(in_tweet: tweepy.models.Status) -> bool: 
+def tweet_ok(in_tweet: tweepy.Status) -> bool: 
     '''returns False if tweet contains a trigger word, True otherwise'''
     text = in_tweet.text.lower()
     for trigger in get_trigger_words():
@@ -56,7 +56,7 @@ def tweet_ok(in_tweet: tweepy.models.Status) -> bool:
             return False
     return True
 #%%
-def get_new_tweets() -> tweepy.models.SearchResults: 
+def get_new_tweets() -> tweepy.SearchResults: 
     '''searches for new tweets with set parameters and returns a list of tweet objects'''
     print("Fetching new tweets...")
     return api.search(q='"hoop earrings" -filter:retweets filter:safe', result_type="recent", lang="en", since_id=get_last_seen(), count=90)
@@ -68,12 +68,53 @@ def fav_tweets() -> None:
         api.create_favorite(tweet.id)
 #%%
 def main() -> None:
+    
     new_tweets = get_new_tweets()
     new_clean_tweets = clean_tweets(new_tweets)
+    
+    tweet_id = []
+    user_id = []
+    user_name = []
+    user_location = []
+    user_verified = []
+    user_followers = []
+    user_following = []
+    retweets = []
+    favorites = []
+    liked = []
+    
+    for tweet in new_clean_tweets:
+        tweet_id.append(tweet.id)
+        user_id.append(tweet.user.id)
+        user_name.append(tweet.user.screen_name)
+        user_location.append(tweet.user.location)
+        user_verified.append(tweet.user.verified)
+        user_followers.append(tweet.user.followers_count)
+        user_following.append(tweet.user.friends_count)
+        retweets.append(tweet.retweet_count)
+        favorites.append(tweet.favorite_count)
+        liked.append(False)
+    
+    new_clean_tweets_dict = {
+        "tweet_id": tweet_id,
+        "user_id ": user_id,
+        "user_name": user_name,
+        "user_location": user_location,
+        "user_verified": user_verified,
+        "user_followers": user_followers,
+        "user_following": user_following,
+        "retweets": retweets,
+        "favorites": favorites,
+        "liked": liked
+        }
+    
+    new_tweets_df = pd.DataFrame(new_clean_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
+    
     return
 
 while __name__ == "__main__":
     main()
+    print("Sleeping...")
     time.sleep(3600)
 #%%
 # limits_raw = api.rate_limit_status()
