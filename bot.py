@@ -10,10 +10,10 @@ ACCESS_TOKEN = "1381993715879804932-g5gAk5EC5nkIpF2HkrFkISqSkwrhvl"
 ACCESS_TOKEN_SECRET = "c1BpKABw5Pxrw86d5CeitNs6TMLldtOdY5DVAlF6njJvx"
 callback_uri = "oob" 
 
-#set up OAuth for Twitter API
+# set up OAuth for Twitter API
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-#rename for ease of use
+# rename for ease of use
 api = tweepy.API(auth)
 #%%
 def get_trigger_words() -> list:
@@ -68,7 +68,7 @@ def fav_tweets() -> None:
         api.create_favorite(tweet.id)
 #%%
 def main() -> None:
-    #fetch and clean new tweets
+    # fetch and clean new tweets
     new_tweets = get_new_tweets()
     new_filtered_tweets = filter_tweets(new_tweets)
     
@@ -107,7 +107,7 @@ def main() -> None:
         "favorites": favorites,
         "liked": liked
         }
-    #save clean tweets data to a data frame
+    # save clean tweets data to a data frame
     new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
     
     return
