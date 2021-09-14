@@ -6,24 +6,29 @@ import re
 import json
 import pandas as pd
 # %%
-consumer_key = "dTaeqdz0o0hUJMQor85t8Uv3J"
-consumer_secret = "6cxeZfGMxpZ0IIfrrUe17tMxJBtWzFOHFqKWAChIIk3WwLbx3t"
-access_token = "1381993715879804932-g5gAk5EC5nkIpF2HkrFkISqSkwrhvl"
-access_token_secret = "c1BpKABw5Pxrw86d5CeitNs6TMLldtOdY5DVAlF6njJvx"
+CONSUMER_KEY = "dTaeqdz0o0hUJMQor85t8Uv3J"
+CONSUMER_SECRET = "6cxeZfGMxpZ0IIfrrUe17tMxJBtWzFOHFqKWAChIIk3WwLbx3t"
+ACCESS_TOKEN = "1381993715879804932-g5gAk5EC5nkIpF2HkrFkISqSkwrhvl"
+ACCESS_TOKEN_SECRET = "c1BpKABw5Pxrw86d5CeitNs6TMLldtOdY5DVAlF6njJvx"
 callback_uri = "oob" 
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-
+#set up OAuth for Twitter API
+auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+#rename for easy use
 api = tweepy.API(auth)
 #%%
-trigger_words = list() #list of words to filter from tweets
-trigger_handle = open("trigger_words.txt")
-for word in trigger_handle: #loads filter words from trigger_words.txt
-    word = word.rstrip().lower()
-    trigger_words.append(word)
+def get_trigger_words():
+    '''returns list of words to be avoided loaded from trigger_words.txt'''
+    trigger_words = list() #list of words to filter from tweets
+    trigger_handle = open("trigger_words.txt")
+    for word in trigger_handle: #loads filter words from trigger_words.txt
+        word = word.rstrip().lower()
+        trigger_words.append(word)
+    return trigger_words
 #%%
-def get_last_seen(): #returns value stored in last_seen_id.txt
+def get_last_seen(): 
+    '''returns value stored in last_seen_id.txt'''
     fhand = open("last_seen_id.txt")
     return fhand.read()
 #%%
