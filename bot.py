@@ -40,7 +40,7 @@ def update_last_seen(tweet: tweepy.Status) -> None:
     fhand.write(str(tweet.id))
     fhand.close()
 #%%
-def clean_tweets(tweets: list) -> list:
+def filter_tweets(tweets: list) -> list:
     '''filters out a list of tweets containing trigger words and returns the clean list'''
     print("Cleaning tweets...")
     for count, tweet in enumerate(tweets):
@@ -68,9 +68,9 @@ def fav_tweets() -> None:
         api.create_favorite(tweet.id)
 #%%
 def main() -> None:
-    
+    #fetch and clean new tweets
     new_tweets = get_new_tweets()
-    new_clean_tweets = clean_tweets(new_tweets)
+    new_filtered_tweets = filter_tweets(new_tweets)
     
     tweet_id = []
     user_id = []
@@ -83,7 +83,7 @@ def main() -> None:
     favorites = []
     liked = []
     
-    for tweet in new_clean_tweets:
+    for tweet in new_filtered_tweets:
         tweet_id.append(tweet.id)
         user_id.append(tweet.user.id)
         user_name.append(tweet.user.screen_name)
@@ -95,7 +95,7 @@ def main() -> None:
         favorites.append(tweet.favorite_count)
         liked.append(False)
     
-    new_clean_tweets_dict = {
+    new_filtered_tweets_dict = {
         "tweet_id": tweet_id,
         "user_id ": user_id,
         "user_name": user_name,
@@ -107,8 +107,8 @@ def main() -> None:
         "favorites": favorites,
         "liked": liked
         }
-    
-    new_tweets_df = pd.DataFrame(new_clean_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
+    #save clean tweets data to a data frame
+    new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
     
     return
 
