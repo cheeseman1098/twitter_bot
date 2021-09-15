@@ -61,12 +61,6 @@ def get_new_tweets() -> tweepy.SearchResults:
     print("Fetching new tweets...")
     return api.search(q='"hoop earrings" -filter:retweets filter:safe', result_type="recent", lang="en", since_id=get_last_seen(), count=90)
 #%%
-def fav_tweets() -> None:
-    for tweet in get_new_tweets():
-        update_last_seen(tweet)
-        if tweet_ok(tweet) == False: continue
-        api.create_favorite(tweet.id)
-#%%
 def clean_data(tweet_data: dict) -> bool:
     '''performs various checks on data'''
     
@@ -83,7 +77,7 @@ def clean_data(tweet_data: dict) -> bool:
     
     return True
 #%%
-if __name__ == "__main__":
+def main() -> None:
     # fetch and filter new tweets, update last_seen_id.txt
     new_tweets = get_new_tweets()
     new_filtered_tweets = filter_tweets(new_tweets)
@@ -130,8 +124,20 @@ if __name__ == "__main__":
         "fetched_at": fetched_at
         }
     
-    #check retrieved data is clean 
+    # check retrieved data is clean 
     if clean_data(new_filtered_tweets_dict) == False: pass
+
+    # like tweets
+    for i in range(len(new_filtered_tweets_dict["liked"])):
+        if new_filtered_tweets_dict["liked"][i] == False:
+            tweet = new_filtered_tweets_dict["tweet_id"][i]
+            try:
+                print("Liking tweet {}".format(tweet))
+                api.create_favorite(tweet)
+                new_filtered_tweets_dict["liked"][i] = True
+            except TweepError:
+                print("Tweet already liked.")
+                new_filtered_tweets_dict["liked"][i] = True
     
     # save clean new tweets data to a data frame
     new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked", "fetched_at"])
@@ -145,7 +151,10 @@ if __name__ == "__main__":
     # save tweets data on tweet_records.csv
     tweet_records_updated.to_csv("tweet_records.csv")
     
-
+if __name__ == "__main__":
+    print("Starting bot...")
+    main()
+    print("Finished. Shutting down...")
 
 #%%
 # limits_raw = api.rate_limit_status()
