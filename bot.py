@@ -42,7 +42,7 @@ def update_last_seen(tweet: tweepy.Status) -> None:
 #%%
 def filter_tweets(tweets: list) -> list:
     '''filters out a list of tweets containing trigger words and returns the clean list'''
-    print("Cleaning tweets...")
+    print("Filtering tweets...")
     for count, tweet in enumerate(tweets):
         update_last_seen(tweet)
         if tweet_ok(tweet) == False: tweets.pop(count)
