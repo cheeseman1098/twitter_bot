@@ -67,7 +67,7 @@ def fav_tweets() -> None:
         if tweet_ok(tweet) == False: continue
         api.create_favorite(tweet.id)
 #%%
-def main() -> None:
+if __name__ == "__main__":
     # fetch and clean new tweets
     new_tweets = get_new_tweets()
     new_filtered_tweets = filter_tweets(new_tweets)
@@ -96,8 +96,8 @@ def main() -> None:
         liked.append(False)
     
     new_filtered_tweets_dict = {
+        "user_id": user_id,
         "tweet_id": tweet_id,
-        "user_id ": user_id,
         "user_name": user_name,
         "user_location": user_location,
         "user_verified": user_verified,
@@ -107,15 +107,20 @@ def main() -> None:
         "favorites": favorites,
         "liked": liked
         }
-    # save clean tweets data to a data frame
+    # save clean new tweets data to a data frame
     new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
     
-    return
+    # load tweets database on to a data frame
+    tweet_records_old = pd.read_csv("tweet_records.csv", index_col=0)
+    
+    # append new tweets data to old records
+    tweet_records_updated = pd.concat([tweet_records_old, new_tweets_df], ignore_index=True)
+    
+    # save tweets data on tweet_records.csv
+    tweet_records_updated.to_csv("tweet_records.csv")
+    
 
-while __name__ == "__main__":
-    main()
-    print("Sleeping...")
-    time.sleep(3600)
+
 #%%
 # limits_raw = api.rate_limit_status()
 # limits_formatted = json.dumps(limits_raw, indent=2)
