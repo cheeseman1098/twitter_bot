@@ -67,10 +67,29 @@ def fav_tweets() -> None:
         if tweet_ok(tweet) == False: continue
         api.create_favorite(tweet.id)
 #%%
+def clean_data(tweet_data: dict) -> bool:
+    '''performs various checks on data'''
+    
+    # checking for duplicates
+    tweet_id_set = set(tweet_data["tweet_id"])
+    if len(tweet_data["tweet_id"]) != len(tweet_id_set):
+        raise RuntimeError("The new data has duplicates.")
+        return False
+    
+    # checking for empty data 
+    if len(tweet_data["tweet_id"]) == 0:
+        print("No new tweets were found.")
+        return False
+    
+    return True
+#%%
 if __name__ == "__main__":
-    # fetch and clean new tweets
+    # fetch and filter new tweets, update last_seen_id.txt
     new_tweets = get_new_tweets()
     new_filtered_tweets = filter_tweets(new_tweets)
+    
+    # get current time and date 
+    td = time.gmtime(time.time())
     
     tweet_id = []
     user_id = []
@@ -82,6 +101,7 @@ if __name__ == "__main__":
     retweets = []
     favorites = []
     liked = []
+    fetched_at = []
     
     for tweet in new_filtered_tweets:
         tweet_id.append(tweet.id)
@@ -94,6 +114,7 @@ if __name__ == "__main__":
         retweets.append(tweet.retweet_count)
         favorites.append(tweet.favorite_count)
         liked.append(False)
+        fetched_at.append("{d}/{m}/{y}".format(d=td[2], m=td[1], y=td[0]))
     
     new_filtered_tweets_dict = {
         "user_id": user_id,
@@ -105,10 +126,15 @@ if __name__ == "__main__":
         "user_following": user_following,
         "retweets": retweets,
         "favorites": favorites,
-        "liked": liked
+        "liked": liked,
+        "fetched_at": fetched_at
         }
+    
+    #check retrieved data is clean 
+    if clean_data(new_filtered_tweets_dict) == False: pass
+    
     # save clean new tweets data to a data frame
-    new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked"])
+    new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked", "fetched_at"])
     
     # load tweets database on to a data frame
     tweet_records_old = pd.read_csv("tweet_records.csv", index_col=0)
