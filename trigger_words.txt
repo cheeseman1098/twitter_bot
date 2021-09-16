@@ -2,3 +2,7 @@ trump
 biden
 politics
 terror
+police
+emergency
+crime
+crimes
