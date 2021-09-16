@@ -10,6 +10,12 @@ ACCESS_TOKEN = "1381993715879804932-g5gAk5EC5nkIpF2HkrFkISqSkwrhvl"
 ACCESS_TOKEN_SECRET = "c1BpKABw5Pxrw86d5CeitNs6TMLldtOdY5DVAlF6njJvx"
 callback_uri = "oob" 
 
+# list of queries to send to API when serching for new tweets
+QUERIES = [
+    "hoop earrings",
+    "cringe"
+    ]
+
 # set up OAuth for Twitter API
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
@@ -30,21 +36,20 @@ def get_last_seen() -> str:
     fhand = open("last_seen_id.txt")
     return fhand.read()
 #%%
-def update_last_seen(tweet: tweepy.Status) -> None:
+def update_last_seen(tweet: int) -> None:
     '''saves the input tweet's ID on to file last_seen_id.txt'''
     f = open("last_seen_id.txt")
     last_id = int(f.read())
     f.close()
-    if last_id >= tweet.id: return
+    if last_id >= tweet: return
     fhand = open("last_seen_id.txt","w")
-    fhand.write(str(tweet.id))
+    fhand.write(str(tweet))
     fhand.close()
 #%%
 def filter_tweets(tweets: list) -> list:
     '''filters out a list of tweets containing trigger words and returns the clean list'''
     print("Filtering tweets...")
     for count, tweet in enumerate(tweets):
-        update_last_seen(tweet)
         if tweet_ok(tweet) == False: tweets.pop(count)
     return tweets
 #%%
@@ -56,10 +61,11 @@ def tweet_ok(in_tweet: tweepy.Status) -> bool:
             return False
     return True
 #%%
-def get_new_tweets() -> tweepy.SearchResults: 
+def get_new_tweets(query: str, num_results=90) -> tweepy.SearchResults: 
     '''searches for new tweets with set parameters and returns a list of tweet objects'''
     print("Fetching new tweets...")
-    return api.search(q='"hoop earrings" -filter:retweets filter:safe', result_type="recent", lang="en", since_id=get_last_seen(), count=90)
+    search_query = '"{}" -filter:retweets filter:safe'.format(query)
+    return api.search(q=search_query, result_type="recent", lang="en", since_id=get_last_seen(), count=num_results)
 #%%
 def clean_data(tweet_data: dict) -> bool:
     '''performs various checks on data'''
@@ -77,10 +83,7 @@ def clean_data(tweet_data: dict) -> bool:
     
     return True
 #%%
-def main() -> None:
-    # fetch and filter new tweets, update last_seen_id.txt
-    new_tweets = get_new_tweets()
-    new_filtered_tweets = filter_tweets(new_tweets)
+if __name__ == "__main__":
     
     # get current time and date 
     td = time.gmtime(time.time())
@@ -96,19 +99,26 @@ def main() -> None:
     favorites = []
     liked = []
     fetched_at = []
+    from_query = []
     
-    for tweet in new_filtered_tweets:
-        tweet_id.append(tweet.id)
-        user_id.append(tweet.user.id)
-        user_name.append(tweet.user.screen_name)
-        user_location.append(tweet.user.location)
-        user_verified.append(tweet.user.verified)
-        user_followers.append(tweet.user.followers_count)
-        user_following.append(tweet.user.friends_count)
-        retweets.append(tweet.retweet_count)
-        favorites.append(tweet.favorite_count)
-        liked.append(False)
-        fetched_at.append("{d}/{m}/{y}".format(d=td[2], m=td[1], y=td[0]))
+    for count, query in enumerate(QUERIES):
+        
+        new_tweets = get_new_tweets(query)
+        new_filtered_tweets = filter_tweets(new_tweets)
+        
+        for tweet in new_filtered_tweets:
+            tweet_id.append(tweet.id)
+            user_id.append(tweet.user.id)
+            user_name.append(tweet.user.screen_name)
+            user_location.append(tweet.user.location)
+            user_verified.append(tweet.user.verified)
+            user_followers.append(tweet.user.followers_count)
+            user_following.append(tweet.user.friends_count)
+            retweets.append(tweet.retweet_count)
+            favorites.append(tweet.favorite_count)
+            liked.append(False)
+            fetched_at.append("{d}/{m}/{y}".format(d=td[2], m=td[1], y=td[0]))
+            from_query.append(query)
     
     new_filtered_tweets_dict = {
         "user_id": user_id,
@@ -121,7 +131,8 @@ def main() -> None:
         "retweets": retweets,
         "favorites": favorites,
         "liked": liked,
-        "fetched_at": fetched_at
+        "fetched_at": fetched_at,
+        "from_query": from_query
         }
     
     # check retrieved data is clean 
@@ -129,18 +140,19 @@ def main() -> None:
 
     # like tweets
     for i in range(len(new_filtered_tweets_dict["liked"])):
+        tweet = new_filtered_tweets_dict["tweet_id"][i]
+        update_last_seen(tweet)
         if new_filtered_tweets_dict["liked"][i] == False:
-            tweet = new_filtered_tweets_dict["tweet_id"][i]
             try:
                 print("Liking tweet {}".format(tweet))
                 api.create_favorite(tweet)
                 new_filtered_tweets_dict["liked"][i] = True
-            except TweepError:
+            except tweepy.TweepError:
                 print("Tweet already liked.")
                 new_filtered_tweets_dict["liked"][i] = True
     
     # save clean new tweets data to a data frame
-    new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked", "fetched_at"])
+    new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked", "fetched_at", "from_query"])
     
     # load tweets database on to a data frame
     tweet_records_old = pd.read_csv("tweet_records.csv", index_col=0)
@@ -151,10 +163,10 @@ def main() -> None:
     # save tweets data on tweet_records.csv
     tweet_records_updated.to_csv("tweet_records.csv")
     
-if __name__ == "__main__":
-    print("Starting bot...")
-    main()
-    print("Finished. Shutting down...")
+# if __name__ == "__main__":
+#     print("Starting bot...")
+#     main()
+#     print("Finished. Shutting down...")
 
 #%%
 # limits_raw = api.rate_limit_status()
