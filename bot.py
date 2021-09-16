@@ -13,7 +13,7 @@ callback_uri = "oob"
 # list of queries to send to API when serching for new tweets
 QUERIES = [
     "hoop earrings",
-    "cringe"
+    "earrings"
     ]
 
 # set up OAuth for Twitter API
@@ -70,21 +70,26 @@ def get_new_tweets(query: str, num_results=90) -> tweepy.SearchResults:
     search_query = '"{}" -filter:retweets filter:safe'.format(query)
     return api.search(q=search_query, result_type="recent", lang="en", since_id=get_last_seen(), count=num_results)
 #%%
-def clean_data(tweet_data: dict) -> bool:
-    '''performs various checks on data'''
-    
-    # checking for duplicates
-    tweet_id_set = set(tweet_data["tweet_id"])
-    if len(tweet_data["tweet_id"]) != len(tweet_id_set):
-        raise RuntimeError("The new data has duplicates.")
-        return False
+def clean_data(tweet_data: dict) -> dict:
+    '''performs various checks on data and returns clean dict'''
+    print("Cleaning retrieved tweets...")
+    # getting rid of duplicates
+    seen_tweets = [] # list to track what ID's have appeared already 
+    for count, tweet_id in enumerate(tweet_data["tweet_id"]):
+        if tweet_id in seen_tweets:
+            print("Found duplicate. Removing...")
+            for key in tweet_data:
+                tweet_data[key].pop(count)
+            continue
+        seen_tweets.append(tweet_id)
     
     # checking for empty data 
     if len(tweet_data["tweet_id"]) == 0:
         print("No new tweets were found.")
-        return False
     
-    return True
+    print("Finished cleaning tweets.")
+    
+    return tweet_data
 #%%
 if __name__ == "__main__":
     
@@ -139,7 +144,7 @@ if __name__ == "__main__":
         }
     
     # check retrieved data is clean 
-    if clean_data(new_filtered_tweets_dict) == False: pass
+    new_filtered_tweets_dict = clean_data(new_filtered_tweets_dict)
 
     # like tweets
     for i in range(len(new_filtered_tweets_dict["liked"])):
@@ -175,41 +180,3 @@ if __name__ == "__main__":
 # limits_raw = api.rate_limit_status()
 # limits_formatted = json.dumps(limits_raw, indent=2)
 # print(limits_formatted)
-# #%%
-# print("Starting bot...")
-# while True:
-#     fav_tweets()
-#     print("Sleeping... zzz...")
-#     time.sleep(60)
-# #%%
-# test_tweet = api.search(q='"new earrings"', count=1, lang='en')
-# raw_tweet = json.loads(test_tweet)
-# test_tweet_formatted = json.dumps(raw_tweet, indent=2)
-# print(test_tweet_formatted)
-# #%%
-# for tweet in test_tweet:
-#     print(tweet.user.screen_name)
-# liked_tweets = []
-# #%%
-# test_tweets = api.search(q="kanye", count=2)
-# data = list()
-# for tweet in test_tweets:
-#     new_tweet = dict()
-#     new_tweet["tweet_id"] = tweet.id
-#     new_tweet["user_id"] = tweet.user.id
-#     new_tweet["user_name"] = tweet.user.screen_name
-#     new_tweet["user_location"] = tweet.user.location
-#     new_tweet["user_verified"] = tweet.user.verified
-#     new_tweet["user_followers"] = tweet.user.followers_count
-#     new_tweet["user_following"] = tweet.user.friends_count
-#     new_tweet["retweets"] = tweet.retweet_count
-#     #new_tweet["replies"] = tweet.reply_count
-#     new_tweet["favorites"] = tweet.favorite_count
-#     new_tweet["liked"] = False
-#     data.append(new_tweet)
-# #%%
-# record = pd.DataFrame(data)
-# #%%
-# record = record.append(data)
-# #%%
-# record.to_csv("tweet_records.csv")
