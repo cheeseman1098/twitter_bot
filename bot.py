@@ -91,8 +91,7 @@ def clean_data(tweet_data: dict) -> dict:
     
     return tweet_data
 #%%
-if __name__ == "__main__":
-    
+def main() -> None:
     # get current time and date 
     td = time.gmtime(time.time())
     
@@ -163,18 +162,20 @@ if __name__ == "__main__":
     new_tweets_df = pd.DataFrame(new_filtered_tweets_dict, columns=["tweet_id", "user_id", "user_name", "user_location", "user_verified", "user_followers", "user_following", "retweets", "favorites", "liked", "fetched_at", "from_query"])
     
     # load tweets database on to a data frame
+    print("Opening database...")
     tweet_records_old = pd.read_csv("tweet_records.csv", index_col=0)
     
     # append new tweets data to old records
     tweet_records_updated = pd.concat([tweet_records_old, new_tweets_df], ignore_index=True)
     
     # save tweets data on tweet_records.csv
+    print("Updating database...")
     tweet_records_updated.to_csv("tweet_records.csv")
     
-# if __name__ == "__main__":
-#     print("Starting bot...")
-#     main()
-#     print("Finished. Shutting down...")
+if __name__ == "__main__":
+    print("Starting bot...")
+    main()
+    print("Finished. Shutting down...")
 
 #%%
 # limits_raw = api.rate_limit_status()
