@@ -56,8 +56,11 @@ def filter_tweets(tweets: list) -> list:
 def tweet_ok(in_tweet: tweepy.Status) -> bool: 
     '''returns False if tweet contains a trigger word, True otherwise'''
     text = in_tweet.text.lower()
+    bio = in_tweet.user.description.lower()
     for trigger in get_trigger_words():
         if not text.lower().find(trigger) == -1:
+            return False
+        if not bio.lower().find(trigger) == -1:
             return False
     return True
 #%%
