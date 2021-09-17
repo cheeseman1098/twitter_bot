@@ -74,16 +74,28 @@ def get_new_tweets(query: str, num_results=90) -> tweepy.SearchResults:
 #%%
 def clean_data(tweet_data: dict) -> dict:
     '''performs various checks on data and returns clean dict'''
+    
     print("Cleaning retrieved tweets...")
+    
     # getting rid of duplicates
-    seen_tweets = [] # list to track what ID's have appeared already 
+    seen_tweets = [] # dummy list to track what ID's have appeared already 
     for count, tweet_id in enumerate(tweet_data["tweet_id"]):
         if tweet_id in seen_tweets:
-            print("Found duplicate. Removing...")
+            print("Found duplicate tweet. Removing...")
             for key in tweet_data:
                 tweet_data[key].pop(count)
             continue
         seen_tweets.append(tweet_id)
+    
+    # avoiding liking several tweets from same user 
+    seen_users = [] # dummy list to track already seen users 
+    for count, tweet_author in enumerate(tweet_data["user_id"]):
+        if tweet_author in seen_users:
+            print("Already have a tweet from this user. Removing...")
+            for key in tweet_data:
+                tweet_data[key].pop(count)
+            continue
+        seen_users.append(tweet_author)
     
     # checking for empty data 
     if len(tweet_data["tweet_id"]) == 0:
@@ -97,6 +109,7 @@ def main() -> None:
     # get current time and date 
     td = time.gmtime(time.time())
     
+    # dummy lists to build up dict with data from new tweets
     tweet_id = []
     user_id = []
     user_name = []
@@ -110,6 +123,7 @@ def main() -> None:
     fetched_at = []
     from_query = []
     
+    # make new searches for each of the queries and save data to lists above
     for query in QUERIES:
         
         new_tweets = get_new_tweets(query)
@@ -129,6 +143,7 @@ def main() -> None:
             fetched_at.append("{d}/{m}/{y}".format(d=td[2], m=td[1], y=td[0]))
             from_query.append(query)
     
+    # dict with data for all filtered tweets
     new_filtered_tweets_dict = {
         "user_id": user_id,
         "tweet_id": tweet_id,
@@ -144,7 +159,7 @@ def main() -> None:
         "from_query": from_query
         }
     
-    # check retrieved data is clean 
+    # clean the data retrieved 
     new_filtered_tweets_dict = clean_data(new_filtered_tweets_dict)
 
     # like tweets
