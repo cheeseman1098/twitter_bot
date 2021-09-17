@@ -13,7 +13,9 @@ callback_uri = "oob"
 # list of queries to send to API when serching for new tweets
 QUERIES = [
     "hoop earrings",
-    "earrings"
+    "jewellery",
+    "new earrings",
+    "bead earrings"
     ]
 
 # set up OAuth for Twitter API
@@ -108,7 +110,7 @@ def main() -> None:
     fetched_at = []
     from_query = []
     
-    for count, query in enumerate(QUERIES):
+    for query in QUERIES:
         
         new_tweets = get_new_tweets(query)
         new_filtered_tweets = filter_tweets(new_tweets)
@@ -175,7 +177,7 @@ def main() -> None:
 if __name__ == "__main__":
     print("Starting bot...")
     main()
-    print("Finished. Shutting down...")
+    print("Finished. Shutting down.")
 
 #%%
 # limits_raw = api.rate_limit_status()
